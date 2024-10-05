@@ -1,0 +1,28 @@
+# Unity generated files
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]uild/
+[Bb]uilds/
+[Ll]ogs/
+
+# User-specific files
+[Dd]ocs/
+[Mm]emoryCaptures/
+[Mm]yProject.sln
+[Mm]yProject.sln.DotSettings
+[Mm]yProject.userprefs
+
+# Visual Studio files
+.vscode/
+*.unityproj
+*.sln
+*.suo
+*.user
+*.userprefs
+
+# Mac specific files
+.DS_Store
+
+# Windows specific files
+Thumbs.db
