@@ -4,63 +4,77 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SocialPlatforms;
 
+/// <summary>
+/// カメラの移動と操作を管理するクラスです。
+/// このクラスは、ユーザーがカメラを操作するための入力を処理します。
+/// 
+/// 操作方法:
+/// - WASD: 前後左右の移動
+/// - QE: 上昇・降下
+/// - 右ドラッグ: カメラの回転
+/// - 左ドラッグ: 前後左右の移動
+/// - スペース: カメラ操作の有効・無効の切り替え
+/// - F: 回転を実行時の状態に初期化する
+/// </summary>
 public class CameraMover : MonoBehaviour
 {
-    // WASD：前後左右の移動
-    // QE：上昇・降下
-    // 右ドラッグ：カメラの回転
-    // 左ドラッグ：前後左右の移動
-    // スペース：カメラ操作の有効・無効の切り替え
-    // P：回転を実行時の状態に初期化する
-
-    //カメラの移動量
+    // カメラの移動量
     [SerializeField, Range(0.1f, 10.0f)]
     private float _positionStep = 2.0f;
-    //カメラの回転量
+
+    // カメラの回転量
     [SerializeField, Range(0.1f, 10.0f)]
     private float _rotationStep = 0.5f;
 
-    //マウス感度
+    // マウス感度
     [SerializeField, Range(30.0f, 150.0f)]
     private float _mouseSensitive = 90.0f;
 
-    //カメラ操作の有効無効
+    // カメラ操作の有効無効
     private bool _cameraMoveActive = true;
-    //カメラのtransform  
+
+    // カメラのtransform  
     private Transform _camTransform;
-    //マウスの始点 
+
+    // マウスの始点 
     private Vector3 _startMousePos;
-    //カメラ回転の始点情報
+
+    // カメラ回転の始点情報
     private Vector3 _presentCamRotation;
     private Vector3 _presentCamPos;
-    //初期状態 Rotation
+
+    // 初期状態 Rotation
     private Quaternion _initialCamRotation;
-    //UIメッセージの表示
+    private Vector3 _initialcamTransform;
+
+    // UIメッセージの表示
     private bool _uiMessageActiv;
 
     void Start()
     {
         _camTransform = this.gameObject.transform;
 
-        //初期回転の保存
+        // 初期移動の保存
+        _initialcamTransform = this.gameObject.transform.position;
+
+        // 初期回転の保存
         _initialCamRotation = this.gameObject.transform.rotation;
     }
 
     void Update()
     {
-
-        CamControlIsActive(); //カメラ操作の有効無効
+        CamControlIsActive(); // カメラ操作の有効無効
 
         if (_cameraMoveActive)
         {
-            ResetCameraRotation(); //回転角度のみリセット
-            CameraRotationMouseControl(); //カメラの回転 マウス
-            CameraSlideMouseControl(); //カメラの縦横移動 マウス
-            CameraPositionKeyControl(); //カメラのローカル移動 キー
+            ResetCameraTransform(); // カメラリセット
+            CameraRotationMouseControl(); // カメラの回転 マウス
+            CameraSlideMouseControl(); // カメラの縦横移動 マウス
+            CameraPositionKeyControl(); // カメラのローカル移動 キー
         }
     }
 
-    //カメラ操作の有効無効
+    // カメラ操作の有効無効
     public void CamControlIsActive()
     {
         if (Input.GetKeyDown(KeyCode.Space))
@@ -75,17 +89,18 @@ public class CameraMover : MonoBehaviour
         }
     }
 
-    //回転を初期状態にする
-    private void ResetCameraRotation()
+    // 回転を初期状態にする
+    private void ResetCameraTransform()
     {
-        if (Input.GetKeyDown(KeyCode.P))
+        if (Input.GetKeyDown(KeyCode.F))
         {
             this.gameObject.transform.rotation = _initialCamRotation;
+            this.gameObject.transform.position = _initialcamTransform;
             Debug.Log("Cam Rotate : " + _initialCamRotation.ToString());
         }
     }
 
-    //カメラの回転 マウス
+    // カメラの回転 マウス
     private void CameraRotationMouseControl()
     {
         if (Input.GetMouseButtonDown(0))
@@ -101,7 +116,7 @@ public class CameraMover : MonoBehaviour
             float x = (_startMousePos.x - Input.mousePosition.x) / Screen.width;
             float y = (_startMousePos.y - Input.mousePosition.y) / Screen.height;
 
-            //回転開始角度 ＋ マウスの変化量 * マウス感度
+            // 回転開始角度 ＋ マウスの変化量 * マウス感度
             float eulerX = _presentCamRotation.x + y * _mouseSensitive;
             float eulerY = _presentCamRotation.y + x * _mouseSensitive;
 
@@ -109,7 +124,7 @@ public class CameraMover : MonoBehaviour
         }
     }
 
-    //カメラの移動 マウス
+    // カメラの移動 マウス
     private void CameraSlideMouseControl()
     {
         if (Input.GetMouseButtonDown(1))
@@ -133,27 +148,34 @@ public class CameraMover : MonoBehaviour
         }
     }
 
-    //カメラのローカル移動 キー
+    // カメラのローカル移動 キー
     private void CameraPositionKeyControl()
     {
         Vector3 campos = _camTransform.position;
 
-        if (Input.GetKey(KeyCode.D)) { campos += _camTransform.right * Time.deltaTime * _positionStep; }
-        if (Input.GetKey(KeyCode.A)) { campos -= _camTransform.right * Time.deltaTime * _positionStep; }
+        if (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
+        {
+            if (Input.GetKey(KeyCode.W)) { _camTransform.Rotate(Vector3.left); }
+            if (Input.GetKey(KeyCode.S)) { _camTransform.Rotate(Vector3.right); }
+            if (Input.GetKey(KeyCode.A)) { _camTransform.Rotate(Vector3.down); }
+            if (Input.GetKey(KeyCode.D)) { _camTransform.Rotate(Vector3.up); }
+        }
+        else
+        {
+            if (Input.GetKey(KeyCode.W)) { campos += _camTransform.forward * Time.deltaTime * _positionStep; }
+            if (Input.GetKey(KeyCode.S)) { campos -= _camTransform.forward * Time.deltaTime * _positionStep; }
+            if (Input.GetKey(KeyCode.A)) { campos -= _camTransform.right * Time.deltaTime * _positionStep; }
+            if (Input.GetKey(KeyCode.D)) { campos += _camTransform.right * Time.deltaTime * _positionStep; }
+        }
         if (Input.GetKey(KeyCode.E)) { campos += _camTransform.up * Time.deltaTime * _positionStep; }
         if (Input.GetKey(KeyCode.Q)) { campos -= _camTransform.up * Time.deltaTime * _positionStep; }
-        if (Input.GetKey(KeyCode.W)) { campos += _camTransform.forward * Time.deltaTime * _positionStep; }
-        if (Input.GetKey(KeyCode.S)) { campos -= _camTransform.forward * Time.deltaTime * _positionStep; }
-        
-        if (Input.GetKey(KeyCode.Z)) { transform.Rotate(new Vector3(0, -1, 0) * Time.deltaTime * _rotationStep); }
-        if (Input.GetKey(KeyCode.C)) { transform.Rotate(new Vector3(0,  1, 0) * Time.deltaTime * _rotationStep); }
-        if (Input.GetKey(KeyCode.X)) { transform.Rotate(new Vector3( 1, 0, 0) * Time.deltaTime * _rotationStep); }
+
         if (Input.GetKey(KeyCode.Alpha2)) { transform.Rotate(new Vector3(-1, 0, 0) * Time.deltaTime * _rotationStep); }
 
         _camTransform.position = campos;
     }
 
-    //UIメッセージの表示
+    // UIメッセージの表示
     private IEnumerator DisplayUiMessage()
     {
         _uiMessageActiv = true;
